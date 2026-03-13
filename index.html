@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="美团骑手">
+  <meta name="theme-color" content="#ffffff">
+  <title>美团骑手</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect rx=%2218%22 width=%22100%22 height=%22100%22 fill=%22%23FFC300%22/><text x=%2250%22 y=%2268%22 font-size=%2250%22 fill=%22%23333%22 text-anchor=%22middle%22 font-weight=%22bold%22 font-family=%22sans-serif%22>美</text></svg>">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+      background: #F5F5F5;
+      color: #333;
+      -webkit-font-smoothing: antialiased;
+      -webkit-text-size-adjust: 100%;
+      overflow-x: hidden;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .app-header {
+      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 16px;
+      background: #fff;
+      border-bottom: 0.5px solid #EAEAEA;
+    }
+    .header-left { display: flex; align-items: center; gap: 8px; }
+    .mt-logo {
+      width: 30px; height: 30px;
+      background: #FFC300; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px; font-weight: 700; color: #333;
+    }
+    .header-title { font-size: 17px; font-weight: 600; color: #333; }
+    .header-right { display: flex; align-items: center; gap: 16px; }
+    .header-icon {
+      width: 24px; height: 24px;
+      display: flex; align-items: center; justify-content: center;
+      position: relative; color: #666;
+    }
+    .header-badge {
+      position: absolute; top: -4px; right: -6px;
+      background: #FF3B30; color: #fff;
+      font-size: 10px; min-width: 16px; height: 16px;
+      border-radius: 8px; display: flex; align-items: center; justify-content: center;
+      padding: 0 4px; font-weight: 500;
+    }
+    .order-count-tag {
+      font-size: 11px; color: #999; background: #F5F5F5;
+      padding: 2px 8px; border-radius: 10px;
+    }
+
+    .map-container {
+      width: 100%; height: 185px;
+      position: relative; overflow: hidden;
+      background: #EEF3E5;
+    }
+    .map-container svg { width: 100%; height: 100%; }
+    .map-overlay {
+      position: absolute; bottom: 10px; left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255,255,255,0.95); backdrop-filter: blur(6px);
+      padding: 5px 14px; border-radius: 14px;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.1);
+      font-size: 12px; color: #333; white-space: nowrap;
+    }
+    .map-overlay strong { color: #2395FF; }
+
+    .content { padding: 0 0 170px 0; }
+
+    .status-card {
+      margin: 10px 12px; padding: 14px 16px;
+      background: #fff; border-radius: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    }
+    .status-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .status-label {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 15px; font-weight: 600; color: #333;
+    }
+    .status-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #00B578;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.3); }
+    }
+    .status-order-num { font-size: 11px; color: #999; }
+    .timer-row {
+      display: flex; align-items: center; justify-content: space-between;
+      background: #FFF9E6; border-radius: 8px; padding: 10px 12px;
+    }
+    .timer-left { display: flex; align-items: center; gap: 6px; }
+    .timer-icon { font-size: 18px; }
+    .timer-text { font-size: 13px; color: #666; }
+    .timer-text strong { color: #FF6B00; font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .timer-eta { font-size: 13px; color: #999; }
+
+    .address-card {
+      margin: 10px 12px; padding: 16px;
+      background: #fff; border-radius: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    }
+    .addr-item { display: flex; align-items: flex-start; gap: 12px; }
+    .addr-item + .addr-item { margin-top: 0; }
+    .addr-line-wrap {
+      display: flex; flex-direction: column; align-items: center;
+      padding-top: 2px;
+    }
+    .addr-dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .addr-dot.pickup { background: #FF6B00; }
+    .addr-dot.delivery { background: #2395FF; }
+    .addr-dash {
+      width: 1.5px; height: 32px;
+      background: repeating-linear-gradient(to bottom, #DDD 0, #DDD 3px, transparent 3px, transparent 6px);
+      margin: 4px 0;
+    }
+    .addr-info { flex: 1; min-width: 0; }
+    .addr-type { font-size: 11px; color: #999; margin-bottom: 2px; }
+    .addr-name { font-size: 15px; font-weight: 600; color: #333; line-height: 1.3; }
+    .addr-detail { font-size: 13px; color: #666; margin-top: 2px; line-height: 1.4; }
+    .addr-nav-btn {
+      flex-shrink: 0; align-self: center;
+      width: 40px; height: 40px;
+      background: #2395FF; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 2px 8px rgba(35,149,255,0.3);
+    }
+
+    .order-card {
+      margin: 10px 12px; padding: 16px;
+      background: #fff; border-radius: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    }
+    .order-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .order-title { font-size: 14px; font-weight: 600; color: #333; }
+    .order-id { font-size: 11px; color: #999; }
+    .order-items { border-top: 0.5px solid #F0F0F0; padding-top: 10px; }
+    .order-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 4px 0; font-size: 14px; color: #333;
+    }
+    .order-item-name { flex: 1; }
+    .order-item-qty { color: #999; font-size: 13px; margin-left: 8px; }
+    .order-remark {
+      margin-top: 10px; padding: 8px 10px;
+      background: #FFF4F0; border-radius: 6px;
+      font-size: 12px; color: #FF6B00;
+      display: flex; align-items: center; gap: 4px;
+    }
+
+    .customer-card {
+      margin: 10px 12px; padding: 14px 16px;
+      background: #fff; border-radius: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .cust-info {}
+    .cust-name { font-size: 14px; font-weight: 500; color: #333; }
+    .cust-phone { font-size: 13px; color: #999; margin-top: 2px; }
+    .cust-call {
+      width: 42px; height: 42px;
+      background: #00B578; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 2px 8px rgba(0,181,120,0.3);
+    }
+
+    .action-bar {
+      position: fixed; bottom: 64px; left: 0; right: 0;
+      padding: 10px 16px; z-index: 90;
+      display: flex; gap: 10px; align-items: center;
+      background: #fff; border-top: 0.5px solid #EAEAEA;
+    }
+    .btn-secondary {
+      flex-shrink: 0; padding: 12px 16px;
+      background: #F5F5F5; border-radius: 22px;
+      font-size: 14px; color: #666; border: none;
+      font-family: inherit;
+    }
+    .btn-primary {
+      flex: 1; padding: 14px 0;
+      background: linear-gradient(135deg, #FFD100 0%, #FFC300 100%);
+      border-radius: 22px; border: none;
+      font-size: 16px; font-weight: 600; color: #333;
+      font-family: inherit;
+      box-shadow: 0 2px 10px rgba(255,195,0,0.35);
+      transition: transform 0.1s;
+    }
+    .btn-primary:active { transform: scale(0.97); }
+
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      height: 64px; background: #fff;
+      border-top: 0.5px solid #EAEAEA;
+      display: flex; align-items: center; justify-content: space-around;
+      z-index: 100;
+      padding-bottom: env(safe-area-inset-bottom, 0);
+    }
+    .nav-item {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 2px; font-size: 10px; color: #999;
+      position: relative;
+    }
+    .nav-item.active { color: #333; }
+    .nav-item.active .nav-icon svg { fill: #333; stroke: #333; }
+    .nav-icon { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; }
+    .nav-badge {
+      position: absolute; top: -2px; right: -4px;
+      background: #FF3B30; width: 6px; height: 6px; border-radius: 50%;
+    }
+
+    .settings-overlay {
+      position: fixed; inset: 0; z-index: 999;
+      background: rgba(0,0,0,0.5);
+      display: none; align-items: flex-end; justify-content: center;
+    }
+    .settings-overlay.show { display: flex; }
+    .settings-panel {
+      width: 100%; max-width: 500px;
+      background: #fff; border-radius: 16px 16px 0 0;
+      padding: 20px 20px calc(20px + env(safe-area-inset-bottom, 0));
+      max-height: 85vh; overflow-y: auto;
+      animation: slideUp 0.3s ease;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+    .settings-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .settings-title { font-size: 17px; font-weight: 600; }
+    .settings-close {
+      width: 30px; height: 30px;
+      background: #F5F5F5; border-radius: 50%; border: none;
+      font-size: 18px; color: #999; display: flex; align-items: center; justify-content: center;
+      font-family: inherit;
+    }
+    .form-group { margin-bottom: 16px; }
+    .form-label { font-size: 13px; color: #999; margin-bottom: 6px; display: block; }
+    .form-input {
+      width: 100%; padding: 12px 14px;
+      background: #F5F5F5; border: 1.5px solid transparent;
+      border-radius: 10px; font-size: 15px;
+      font-family: inherit; color: #333;
+      transition: border-color 0.2s;
+    }
+    .form-input:focus { outline: none; border-color: #FFC300; background: #FFF; }
+    .form-input::placeholder { color: #C0C0C0; }
+    .form-hint { font-size: 11px; color: #BBB; margin-top: 4px; }
+    .btn-save {
+      width: 100%; padding: 14px 0; margin-top: 8px;
+      background: linear-gradient(135deg, #FFD100, #FFC300);
+      border: none; border-radius: 22px;
+      font-size: 16px; font-weight: 600; color: #333;
+      font-family: inherit;
+    }
+    .btn-reset {
+      width: 100%; padding: 12px 0; margin-top: 8px;
+      background: none; border: none;
+      font-size: 14px; color: #999;
+      font-family: inherit;
+    }
+
+    .toast {
+      position: fixed; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0,0,0,0.75); color: #fff;
+      padding: 12px 24px; border-radius: 8px;
+      font-size: 14px; z-index: 9999;
+      opacity: 0; transition: opacity 0.3s;
+      pointer-events: none;
+    }
+    .toast.show { opacity: 1; }
+
+    .delivered-overlay {
+      position: fixed; inset: 0; z-index: 800;
+      background: rgba(255,255,255,0.96);
+      display: none; flex-direction: column;
+      align-items: center; justify-content: center; gap: 16px;
+    }
+    .delivered-overlay.show { display: flex; }
+    .delivered-check {
+      width: 72px; height: 72px;
+      background: #00B578; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      animation: scaleIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes scaleIn {
+      from { transform: scale(0); }
+      to { transform: scale(1); }
+    }
+    .delivered-text { font-size: 20px; font-weight: 600; color: #333; }
+    .delivered-sub { font-size: 14px; color: #999; }
+  </style>
+</head>
+<body>
+
+  <header class="app-header" id="appHeader">
+    <div class="header-left">
+      <div class="mt-logo">美</div>
+      <span class="header-title">美团配送</span>
+      <span class="order-count-tag">今日<span id="todayCount">7</span>单</span>
+    </div>
+    <div class="header-right">
+      <div class="header-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+        <span class="header-badge" id="msgBadge">2</span>
+      </div>
+      <div class="header-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2">
+          <circle cx="12" cy="12" r="3"/><path d="M12 1v2m0 18v2m-9-11h2m18 0h2m-3.64-6.36-1.41 1.41M6.05 17.95l-1.41 1.41m0-13.72 1.41 1.41M17.95 17.95l1.41 1.41"/>
+        </svg>
+      </div>
+    </div>
+  </header>
+
+  <div class="map-container">
+    <svg viewBox="0 0 375 185" preserveAspectRatio="xMidYMid slice">
+      <rect fill="#EEF3E5" width="375" height="185"/>
+      <rect x="0" y="0" width="375" height="185" fill="url(#mapGrain)" opacity="0.3"/>
+      <defs>
+        <pattern id="mapGrain" x="0" y="0" width="6" height="6" patternUnits="userSpaceOnUse">
+          <rect width="6" height="6" fill="#E8EDD9"/>
+          <rect x="0" y="0" width="3" height="3" fill="#EEF3E5"/>
+        </pattern>
+      </defs>
+      <ellipse cx="330" cy="25" rx="55" ry="28" fill="#C5E1F5" opacity="0.5"/>
+      <rect x="15" y="15" width="42" height="32" rx="3" fill="#C8E6C9" opacity="0.6"/>
+      <rect x="260" y="135" width="48" height="35" rx="3" fill="#C8E6C9" opacity="0.5"/>
+      <line x1="0" y1="92" x2="375" y2="92" stroke="#FFF" stroke-width="10" opacity="0.9"/>
+      <line x1="185" y1="0" x2="185" y2="185" stroke="#FFF" stroke-width="10" opacity="0.9"/>
+      <line x1="0" y1="46" x2="375" y2="46" stroke="#FFF" stroke-width="5" opacity="0.6"/>
+      <line x1="0" y1="142" x2="375" y2="142" stroke="#FFF" stroke-width="5" opacity="0.6"/>
+      <line x1="92" y1="0" x2="92" y2="185" stroke="#FFF" stroke-width="5" opacity="0.6"/>
+      <line x1="280" y1="0" x2="280" y2="185" stroke="#FFF" stroke-width="5" opacity="0.6"/>
+      <rect x="100" y="52" width="32" height="24" rx="2" fill="#E0DDCF" opacity="0.7"/>
+      <rect x="140" y="56" width="26" height="20" rx="2" fill="#D8D5C8" opacity="0.7"/>
+      <rect x="195" y="100" width="36" height="24" rx="2" fill="#E0DDCF" opacity="0.7"/>
+      <rect x="240" y="52" width="28" height="28" rx="2" fill="#D8D5C8" opacity="0.7"/>
+      <rect x="295" y="98" width="32" height="26" rx="2" fill="#E0DDCF" opacity="0.7"/>
+      <rect x="40" y="100" width="36" height="26" rx="2" fill="#E0DDCF" opacity="0.7"/>
+      <rect x="100" y="100" width="22" height="24" rx="2" fill="#D8D5C8" opacity="0.6"/>
+      <rect x="195" y="52" width="22" height="22" rx="2" fill="#E0DDCF" opacity="0.5"/>
+      <rect x="300" y="52" width="25" height="20" rx="2" fill="#D8D5C8" opacity="0.6"/>
+      <rect x="40" y="52" width="24" height="18" rx="2" fill="#D8D5C8" opacity="0.5"/>
+      <text x="138" y="90" font-size="7" fill="#B8B0A0" font-family="sans-serif">人民东路</text>
+      <text x="190" y="38" font-size="7" fill="#B8B0A0" font-family="sans-serif" transform="rotate(90,190,38)">建设南路</text>
+      <path d="M 108,135 L 108,92 L 185,92 L 185,65 L 258,65"
+            fill="none" stroke="#4285F4" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/>
+      <circle r="4.5" fill="#4285F4">
+        <animateMotion dur="3s" repeatCount="indefinite"
+          path="M 108,135 L 108,92 L 185,92 L 185,65 L 258,65"/>
+      </circle>
+      <g transform="translate(108, 135)">
+        <circle r="11" fill="#FF6B00" opacity="0.15"/>
+        <circle r="6" fill="#FF6B00"/>
+        <circle r="2.2" fill="#FFF"/>
+      </g>
+      <g transform="translate(258, 65)">
+        <circle r="11" fill="#2395FF" opacity="0.15"/>
+        <circle r="6" fill="#2395FF"/>
+        <circle r="2.2" fill="#FFF"/>
+      </g>
+    </svg>
+    <div class="map-overlay">
+      距离 <strong id="mapDist">1.8</strong>km · 约<strong id="mapTime">6</strong>分钟
+    </div>
+  </div>
+
+  <main class="content">
+    <section class="status-card">
+      <div class="status-top">
+        <div class="status-label">
+          <span class="status-dot"></span>
+          配送中 · 正在前往顾客位置
+        </div>
+      </div>
+      <div class="status-order-num" style="margin-bottom:10px;font-size:12px;color:#999">
+        单号 <span id="orderNo"></span>
+      </div>
+      <div class="timer-row">
+        <div class="timer-left">
+          <span class="timer-icon">⏱</span>
+          <div class="timer-text">剩余 <strong id="countdown">--:--</strong></div>
+        </div>
+        <div class="timer-eta">预计 <span id="etaTime">--:--</span> 送达</div>
+      </div>
+    </section>
+
+    <section class="address-card">
+      <div class="addr-item">
+        <div class="addr-line-wrap">
+          <div class="addr-dot pickup"></div>
+          <div class="addr-dash"></div>
+        </div>
+        <div class="addr-info">
+          <div class="addr-type">取餐商家</div>
+          <div class="addr-name" id="merchantName">茶百道(人民路店)</div>
+          <div class="addr-detail" id="merchantAddr">人民东路128号万达广场B1层</div>
+        </div>
+      </div>
+      <div class="addr-item">
+        <div class="addr-line-wrap">
+          <div class="addr-dot delivery"></div>
+        </div>
+        <div class="addr-info">
+          <div class="addr-type">送达地址</div>
+          <div class="addr-name" id="deliveryName">阳光花园小区</div>
+          <div class="addr-detail" id="deliveryAddr">2栋1单元 502室</div>
+        </div>
+        <div class="addr-nav-btn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff">
+            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+          </svg>
+        </div>
+      </div>
+    </section>
+
+    <section class="order-card">
+      <div class="order-header">
+        <div class="order-title">订单详情</div>
+        <div class="order-id" id="orderIdShort"></div>
+      </div>
+      <div class="order-items" id="orderItems"></div>
+      <div class="order-remark" id="orderRemark">
+        <span>📌</span> <span id="remarkText">请放门口，不要按门铃</span>
+      </div>
+    </section>
+
+    <section class="customer-card">
+      <div class="cust-info">
+        <div class="cust-name" id="custName">张**</div>
+        <div class="cust-phone" id="custPhone">138****5678</div>
+      </div>
+      <div class="cust-call">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff">
+          <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
+        </svg>
+      </div>
+    </section>
+  </main>
+
+  <div class="action-bar">
+    <button class="btn-secondary" id="btnReport">异常上报</button>
+    <button class="btn-primary" id="btnDeliver">确认送达</button>
+  </div>
+
+  <nav class="bottom-nav">
+    <div class="nav-item active">
+      <div class="nav-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="#333" stroke="none">
+          <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+        </svg>
+      </div>
+      <span>首页</span>
+    </div>
+    <div class="nav-item">
+      <div class="nav-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="1.8">
+          <rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="3" x2="9" y2="9"/>
+        </svg>
+      </div>
+      <span>订单</span>
+      <div class="nav-badge"></div>
+    </div>
+    <div class="nav-item">
+      <div class="nav-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="1.8">
+          <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+        </svg>
+      </div>
+      <span>收入</span>
+    </div>
+    <div class="nav-item">
+      <div class="nav-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="1.8">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+        </svg>
+      </div>
+      <span>我的</span>
+    </div>
+  </nav>
+
+  <div class="settings-overlay" id="settingsOverlay">
+    <div class="settings-panel">
+      <div class="settings-header">
+        <span class="settings-title">配送设置</span>
+        <button class="settings-close" id="settingsClose">✕</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label">送达地址（小区名称）</label>
+        <input class="form-input" id="cfgDeliveryName" placeholder="如：阳光花园小区">
+      </div>
+      <div class="form-group">
+        <label class="form-label">送达详细地址</label>
+        <input class="form-input" id="cfgDeliveryAddr" placeholder="如：2栋1单元 502室">
+      </div>
+      <div class="form-group">
+        <label class="form-label">商家名称</label>
+        <input class="form-input" id="cfgMerchantName" placeholder="留空则随机">
+        <div class="form-hint">留空会在每次打开时随机展示不同商家</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">商家地址</label>
+        <input class="form-input" id="cfgMerchantAddr" placeholder="留空则随机">
+      </div>
+      <div class="form-group">
+        <label class="form-label">配送剩余分钟数</label>
+        <input class="form-input" id="cfgTimerMin" type="number" placeholder="25" min="5" max="60">
+        <div class="form-hint">默认 20~35 分钟随机</div>
+      </div>
+      <button class="btn-save" id="btnSave">保存设置</button>
+      <button class="btn-reset" id="btnReset">恢复默认</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <div class="delivered-overlay" id="deliveredOverlay">
+    <div class="delivered-check">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12"/>
+      </svg>
+    </div>
+    <div class="delivered-text">已送达</div>
+    <div class="delivered-sub">订单已完成，即将刷新...</div>
+  </div>
+
+<script>
+const MERCHANTS = [
+  { name: '茶百道(人民路店)', addr: '人民东路128号万达广场B1层' },
+  { name: '蜜雪冰城(文化路店)', addr: '文化路56号临街商铺' },
+  { name: '张亮麻辣烫(中心街店)', addr: '中心街89号' },
+  { name: '沙县小吃(建设路店)', addr: '建设南路201号' },
+  { name: '杨国福麻辣烫(步行街店)', addr: '步行街中段12号' },
+  { name: '正新鸡排(大学路店)', addr: '大学路168号' },
+  { name: '华莱士(朝阳路店)', addr: '朝阳路55号' },
+  { name: '兰州拉面(解放路店)', addr: '解放路78号' },
+  { name: '肯德基(万达店)', addr: '万达广场1层F102' },
+  { name: '麦当劳(火车站店)', addr: '站前路1号火车站广场' },
+  { name: '瑞幸咖啡(科技园店)', addr: '科技路99号创业大厦1层' },
+  { name: '古茗(商业街店)', addr: '商业街中段33号' },
+  { name: '书亦烧仙草(学府路店)', addr: '学府路220号' },
+  { name: '绝味鸭脖(胜利路店)', addr: '胜利路46号' },
+  { name: '老乡鸡(人民广场店)', addr: '人民广场西侧裙楼1层' }
+];
+
+const ITEMS_POOL = [
+  [{ n: '珍珠奶茶(大杯)', q: 1 }, { n: '多肉葡萄', q: 1 }],
+  [{ n: '杨枝甘露(中杯)', q: 2 }],
+  [{ n: '招牌麻辣烫(大份)', q: 1 }, { n: '米饭', q: 1 }],
+  [{ n: '香辣鸡腿堡', q: 1 }, { n: '薯条(大)', q: 1 }, { n: '可乐(中)', q: 1 }],
+  [{ n: '红烧牛肉面', q: 1 }, { n: '卤蛋', q: 2 }],
+  [{ n: '蛋炒饭', q: 1 }, { n: '酸辣汤', q: 1 }],
+  [{ n: '黄焖鸡米饭(大份)', q: 1 }],
+  [{ n: '手抓饼套餐', q: 1 }, { n: '豆浆', q: 1 }],
+  [{ n: '鸡排饭', q: 1 }, { n: '柠檬茶', q: 1 }],
+  [{ n: '冰鲜柠檬水(大杯)', q: 3 }],
+  [{ n: '生椰拿铁', q: 1 }, { n: '美式咖啡', q: 1 }],
+  [{ n: '芋泥啵啵奶茶', q: 1 }, { n: '烤奶(大杯)', q: 1 }],
+  [{ n: '扁豆焖面', q: 1 }, { n: '凉菜拼盘', q: 1 }],
+  [{ n: '宫保鸡丁盖饭', q: 1 }, { n: '紫菜蛋花汤', q: 1 }]
+];
+
+const REMARKS = [
+  '请放门口，不要按门铃', '到了打电话', '放门卫处即可',
+  '尽快送达，谢谢', '少放辣', '多加醋包',
+  '不要放蒜，谢谢', '提前电话联系', '麻烦快一点谢谢',
+  '放在快递柜旁边', '到小区门口电话联系'
+];
+
+const SURNAMES = ['张', '李', '王', '刘', '陈', '杨', '赵', '黄', '周', '吴', '徐', '孙', '马', '朱', '胡'];
+
+function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+function pick(arr) { return arr[rand(0, arr.length - 1)]; }
+function pad2(n) { return n < 10 ? '0' + n : '' + n; }
+
+function loadSettings() {
+  try { return JSON.parse(localStorage.getItem('mt_rider_cfg') || '{}'); } catch { return {}; }
+}
+function saveSettings(cfg) { localStorage.setItem('mt_rider_cfg', JSON.stringify(cfg)); }
+
+function genOrderNo() {
+  const now = new Date();
+  const d = '' + now.getFullYear() + pad2(now.getMonth() + 1) + pad2(now.getDate());
+  const r = '' + rand(10000000, 99999999);
+  return 'MT' + d + r;
+}
+
+function showToast(msg, duration) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), duration || 2000);
+}
+
+let timerInterval = null;
+let remainSec = 0;
+
+function initPage() {
+  const cfg = loadSettings();
+
+  const merchant = cfg.merchantName
+    ? { name: cfg.merchantName, addr: cfg.merchantAddr || '' }
+    : pick(MERCHANTS);
+  const items = pick(ITEMS_POOL);
+  const remark = pick(REMARKS);
+  const surname = pick(SURNAMES);
+  const phoneMiddle = pad2(rand(0, 99));
+  const phoneTail = '' + rand(1000, 9999);
+  const orderNo = genOrderNo();
+
+  document.getElementById('merchantName').textContent = merchant.name;
+  document.getElementById('merchantAddr').textContent = merchant.addr;
+
+  if (cfg.deliveryName) document.getElementById('deliveryName').textContent = cfg.deliveryName;
+  if (cfg.deliveryAddr) document.getElementById('deliveryAddr').textContent = cfg.deliveryAddr;
+
+  document.getElementById('orderNo').textContent = orderNo;
+  document.getElementById('orderIdShort').textContent = '#' + orderNo.slice(-8);
+
+  const custGender = Math.random() > 0.5 ? '先生' : '女士';
+  document.getElementById('custName').textContent = surname + '**' + custGender;
+  document.getElementById('custPhone').textContent = '1' + rand(3, 9) + phoneMiddle[0] + '****' + phoneTail;
+
+  const itemsHtml = items.map(i =>
+    '<div class="order-item"><span class="order-item-name">' + i.n + '</span><span class="order-item-qty">×' + i.q + '</span></div>'
+  ).join('');
+  document.getElementById('orderItems').innerHTML = itemsHtml;
+  document.getElementById('remarkText').textContent = remark;
+
+  document.getElementById('todayCount').textContent = '' + rand(3, 12);
+  document.getElementById('msgBadge').textContent = '' + rand(1, 5);
+
+  const dist = (rand(8, 28) / 10).toFixed(1);
+  const estMin = Math.max(3, Math.round(parseFloat(dist) * 3.2));
+  document.getElementById('mapDist').textContent = dist;
+  document.getElementById('mapTime').textContent = '' + estMin;
+
+  const timerMin = cfg.timerMin ? parseInt(cfg.timerMin) : rand(20, 35);
+  remainSec = timerMin * 60 + rand(0, 59);
+  const now = new Date();
+  const eta = new Date(now.getTime() + remainSec * 1000);
+  document.getElementById('etaTime').textContent = pad2(eta.getHours()) + ':' + pad2(eta.getMinutes());
+
+  if (timerInterval) clearInterval(timerInterval);
+  updateTimer();
+  timerInterval = setInterval(updateTimer, 1000);
+}
+
+function updateTimer() {
+  if (remainSec <= 0) { remainSec = 0; }
+  const m = Math.floor(remainSec / 60);
+  const s = remainSec % 60;
+  document.getElementById('countdown').textContent = pad2(m) + ':' + pad2(s);
+  remainSec--;
+}
+
+let pressTimer = null;
+const header = document.getElementById('appHeader');
+header.addEventListener('touchstart', function (e) {
+  pressTimer = setTimeout(() => openSettings(), 800);
+}, { passive: true });
+header.addEventListener('touchend', function () { clearTimeout(pressTimer); });
+header.addEventListener('touchmove', function () { clearTimeout(pressTimer); });
+header.addEventListener('mousedown', function () {
+  pressTimer = setTimeout(() => openSettings(), 800);
+});
+header.addEventListener('mouseup', function () { clearTimeout(pressTimer); });
+
+function openSettings() {
+  const cfg = loadSettings();
+  document.getElementById('cfgDeliveryName').value = cfg.deliveryName || '';
+  document.getElementById('cfgDeliveryAddr').value = cfg.deliveryAddr || '';
+  document.getElementById('cfgMerchantName').value = cfg.merchantName || '';
+  document.getElementById('cfgMerchantAddr').value = cfg.merchantAddr || '';
+  document.getElementById('cfgTimerMin').value = cfg.timerMin || '';
+  document.getElementById('settingsOverlay').classList.add('show');
+}
+
+document.getElementById('settingsClose').addEventListener('click', function () {
+  document.getElementById('settingsOverlay').classList.remove('show');
+});
+
+document.getElementById('settingsOverlay').addEventListener('click', function (e) {
+  if (e.target === this) this.classList.remove('show');
+});
+
+document.getElementById('btnSave').addEventListener('click', function () {
+  const cfg = {
+    deliveryName: document.getElementById('cfgDeliveryName').value.trim(),
+    deliveryAddr: document.getElementById('cfgDeliveryAddr').value.trim(),
+    merchantName: document.getElementById('cfgMerchantName').value.trim(),
+    merchantAddr: document.getElementById('cfgMerchantAddr').value.trim(),
+    timerMin: document.getElementById('cfgTimerMin').value.trim()
+  };
+  saveSettings(cfg);
+  document.getElementById('settingsOverlay').classList.remove('show');
+  showToast('设置已保存，正在刷新...');
+  setTimeout(initPage, 600);
+});
+
+document.getElementById('btnReset').addEventListener('click', function () {
+  localStorage.removeItem('mt_rider_cfg');
+  document.getElementById('settingsOverlay').classList.remove('show');
+  showToast('已恢复默认');
+  setTimeout(initPage, 600);
+});
+
+document.getElementById('btnDeliver').addEventListener('click', function () {
+  if (navigator.vibrate) navigator.vibrate(30);
+  const overlay = document.getElementById('deliveredOverlay');
+  overlay.classList.add('show');
+  setTimeout(function () {
+    overlay.classList.remove('show');
+    initPage();
+  }, 2500);
+});
+
+document.getElementById('btnReport').addEventListener('click', function () {
+  showToast('暂无需要上报的异常');
+});
+
+initPage();
+
+if (!loadSettings().deliveryName) {
+  setTimeout(function () {
+    showToast('💡 长按顶部标题栏可进入设置', 3500);
+  }, 1500);
+}
+</script>
+
+</body>
+</html>
