@@ -1,0 +1,16 @@
+{
+  "name": "美团骑手",
+  "short_name": "美团骑手",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#F5F5F5",
+  "theme_color": "#ffffff",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 192 192%22><rect width=%22192%22 height=%22192%22 rx=%2238%22 fill=%22%23FFC300%22/><text x=%2296%22 y=%22128%22 font-size=%2296%22 fill=%22%23333%22 text-anchor=%22middle%22 font-weight=%22bold%22 font-family=%22sans-serif%22>美</text></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    }
+  ]
+}
